@@ -5,7 +5,7 @@ module.exports = {
 
     output: {
         filename: 'police.js',
-        path: path.resolve(__dirname, 'dist'),
+        path: __dirname,
     },
 
     mode: "development"
