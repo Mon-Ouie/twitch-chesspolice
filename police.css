@@ -1,0 +1,55 @@
+h1 {
+  font-size: 50px;
+}
+
+button {
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+form  { display: table;      }
+p     { display: table-row;  }
+label { display: table-cell; }
+input { display: table-cell; margin-left: 10px; }
+button { display: table-cell; }
+#status { display: table-cell; }
+
+button {
+  background: #07f;
+  text-decoration: none;
+  font-size: 30px;
+  padding: 10px;
+  margin-right: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #09f;
+}
+
+button:disabled {
+  background: gray;
+}
+
+.status-success::after {
+  content: "✓";
+  font-size: 30px;
+  color: #070;
+  text-align: center;
+  display: table-cell;
+}
+
+.status-failed::after {
+  content: "❌";
+  font-size: 30px;
+  color: #c33;
+  text-align: center;
+  display: table-cell;
+}

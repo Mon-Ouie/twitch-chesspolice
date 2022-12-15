@@ -1,0 +1,19 @@
+{
+  "name": "chesspolice",
+  "version": "1.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "author": "Brandon Pessman <pessman.brandon@gmail.com> (github.com/brandonpessman)",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.2",
+    "tmi.js": "^1.8.5"
+  },
+  "devDependencies": {
+    "path": "^0.12.7",
+    "webpack-cli": "^4.10.0"
+  }
+}
