@@ -21,8 +21,14 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to GH Page
-        uses: JamesIves/github-pages-deploy-action@4.1.1
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          branch: gh-pages
-          folder: .
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
