@@ -1,0 +1,38 @@
+<!DOCTYPE html5>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Twitch Chess Police</title>
+    <link rel="stylesheet" href="police.css" />
+  </head>
+  <body>
+    <h1><img src="police.png" alt="police"></img> Twitch Chess Police</h1>
+
+    <form>
+      <p>
+        <label for="channels">Channel Names</label>
+        <input type="text" id="channels" name="channels">
+      </p>
+
+      <p>
+        <label for="username">Bot Username</label>
+        <input type="text" id="username" name="username">
+      </p>
+
+      <p>
+        <label for="bot-oauth-token">Bot OAuth token</label>
+        <input type="password" id="oauth-token" name="oauth-token"><br>
+      </p>
+
+      <p>
+        <button id="button-start-bot" type="button">Call the cops</button>
+        <span id="status">
+      </p>
+    </form>
+
+    <p>You can obtain the OAuth token for your Twitch account by visiting
+      the <a href="https://twitchapps.com/tmi/">TMI Twitch Application</a>.</p>
+
+    <script src="dist/police.js"></script>
+  </body>
+</html>
