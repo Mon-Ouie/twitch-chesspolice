@@ -15,23 +15,12 @@
       </p>
 
       <p>
-        <label for="username">Bot Username</label>
-        <input type="text" id="username" name="username">
-      </p>
-
-      <p>
-        <label for="bot-oauth-token">Bot OAuth token</label>
-        <input type="password" id="oauth-token" name="oauth-token"><br>
-      </p>
-
-      <p>
         <button id="button-start-bot" type="button">Call the cops</button>
-        <span id="status">
+        <span id="status"></span>
       </p>
     </form>
 
-    <p>You can obtain the OAuth token for your Twitch account by visiting
-      the <a href="https://twitchapps.com/tmi/">TMI Twitch Application</a>.</p>
+    <p><a href="https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=y9xa0xv2nkjzhc8md2jbe4i1eocsvk&redirect_uri=https%3A%2F%2Fmon-ouie.github.io%2Ftwitch-chesspolice%2F&response_type=code&scope=chat:read+chat:edit+moderator:manage:chat_messages">Login with Twitch</a></p>
 
     <script src="police.js"></script>
   </body>

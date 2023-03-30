@@ -9,8 +9,10 @@
   "author": "Brandon Pessman <pessman.brandon@gmail.com> (github.com/brandonpessman)",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.21.2",
-    "tmi.js": "^1.8.5"
+    "@twurple/api": "^6.0.9",
+    "@twurple/auth": "^6.0.9",
+    "@twurple/chat": "^6.0.9",
+    "axios": "^0.21.2"
   },
   "devDependencies": {
     "path": "^0.12.7",

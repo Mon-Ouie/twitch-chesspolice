@@ -1,4 +1,7 @@
-const tmi = require('tmi.js');
+const auth = require('@twurple/auth');
+const chat = require('@twurple/chat');
+const api  = require('@twurple/api');
+const apiCall  = require('@twurple/api-call');
 const axios = require('axios');
 
 // Spaces on a Chess Board
@@ -28,162 +31,138 @@ const unique = [
     '0-0', '0-0-0', 'o-o', 'o-o-o'
 ];
 
-// Options for connecting Twitch Bot to Twitch
-const options = {
-    options: {
-        debug: true,
-    },
-    connection: {
-        cluser: 'aws',
-        reconnect: true,
-    },
-    identity: {
-        username: null,
-        password: null
-    },
-    channels: []
-};
-
 document.querySelector("#channels").value = localStorage.getItem("channels");
-document.querySelector("#username").value = localStorage.getItem("username");
-document.querySelector("#oauth-token").value = localStorage.getItem("oauth-token");
+
+const CLIENT_ID = "y9xa0xv2nkjzhc8md2jbe4i1eocsvk";
+
+const accessMatch = document.location.hash.match(/#access_token=(.+)/);
+if (accessMatch)
+    localStorage.setItem("access-token", accessMatch[1]);
 
 const startButton = document.querySelector("#button-start-bot");
-startButton.addEventListener("click", () => {
-    options.identity.username = document.querySelector("#username").value;
-    options.identity.password = document.querySelector("#oauth-token").value;
+startButton.addEventListener("click", async () => {
+    const accessToken = localStorage.getItem("access-token");
+
+    const authProvider = new auth.StaticAuthProvider(CLIENT_ID, accessToken);
 
     startButton.disabled = "true";
 
     const channelList = document.querySelector("#channels").value.split(/\s+/);
 
-    options.channels = channelList;
-    console.log(options.channels);
+    const client = new chat.ChatClient({ authProvider, channels: channelList });
+    await client.connect();
 
     localStorage.setItem("channels", document.querySelector("#channels").value);
-    localStorage.setItem("username", document.querySelector("#username").value);
-    localStorage.setItem("oauth-token", document.querySelector("#oauth-token").value);
+    localStorage.setItem("access-token", accessToken);
 
     let hintsDestroyed = 0;
     let startTime = new Date();
 
-    // Setting up Connection with Twitch with our options
-    const client = new tmi.client(options);
-
-    client.on("connected", () => {
-        document.querySelector("#status").classList.remove("status-failed");
-        document.querySelector("#status").classList.add("status-success");
-    });
-
-    ["crash", "disconnected", "connectfail", "crash"].forEach(ev => {
-        client.on(ev, () => {
-            document.querySelector("#status").classList.remove("status-success");
-            document.querySelector("#status").classList.add("status-failed");
-        });
-    });
-
-    // Connecting to Twitch
-    client.connect();
+    document.querySelector("#status").classList.add("status-success");
 
     // Initializing Channel Data in memory
-    let channels = [];
-    for (let i = 0; i < channelList.length; i++) {
-        let data = {
-            channel: channelList[i],
-            isOn: false,
-            hintsDestroyed: 0
-        };
+    let channels = {};
 
-        channels.push(data);
+    const selfUserResponse = await apiCall.callTwitchApi(
+        {type: 'helix', url: 'users'}, CLIENT_ID, accessToken);
+    const selfUser = selfUserResponse.data[0].id;
+
+    if (!selfUser) {
+        document.querySelector("#status").classList.add("status-success");
+        document.querySelector("#status").classList.add("status-failed");
     }
 
     // Action when a user chats from any of the channels
-    client.on('chat', (channel, user, message, self) => {
+    client.onMessage(async (channel, user, message, msgData) => {
+        console.log(`[${channel}] ${user} <- ${message}`);
+        user = msgData.userInfo;
         // Set message to all lowercase to make it easier to check
         message = message.toLowerCase();
 
-        for (let t = 0; t < channels.length; t++) {
-            if (channels[t].channel == channel) {
-                let tokens = message.split(' ');
-                if (tokens[0] == "!c" && tokens[1] == "rating" && tokens.length == 4) {
-                    axios.get(`https://api.chess.com/pub/player/${tokens[3]}/stats`).then(res => {
-                        console.log(res.data);
+        if (!channels[channel]) {
+            channels[channel] = {isOn: false, hintsDestroyed: 0};
+        }
 
-                        if (tokens[2] == "bullet" && res.data.chess_bullet) {
-                            let bulletRank = res.data.chess_bullet.last.rating;
-                            client.action(channel.slice(1,channel.length), 'has found a rating of ' + bulletRank + ' for Bullet Chess.');
-                        } else if (tokens[2] == "blitz" && res.data.chess_blitz) {
-                            let blitzRank = res.data.chess_blitz.last.rating;
-                            client.action(channel.slice(1,channel.length), 'has found a rating of ' + blitzRank + ' for Blitz Chess.');
-                        } else if (tokens[2] == "rapid" && res.data.chess_rapid) {
-                            let rapidRank = res.data.chess_rapid.last.rating;
-                            client.action(channel.slice(1,channel.length), 'has found a rating of ' + rapidRank + ' for Rapid Chess.');
-                        } else {
-                            client.action(channel.slice(1,channel.length), 'has found no rating.');
-                        }
-                    });
-                    //
+        const chanData = channels[channel];
+
+        let tokens = message.split(' ');
+        if (tokens[0] == "!c" && tokens[1] == "rating" && tokens.length == 4) {
+            axios.get(`https://api.chess.com/pub/player/${tokens[3]}/stats`).then(res => {
+                console.log(res.data);
+
+                if (tokens[2] == "bullet" && res.data.chess_bullet) {
+                    let bulletRank = res.data.chess_bullet.last.rating;
+                    client.say(channel, 'has found a rating of ' + bulletRank + ' for Bullet Chess.');
+                } else if (tokens[2] == "blitz" && res.data.chess_blitz) {
+                    let blitzRank = res.data.chess_blitz.last.rating;
+                    client.say(channel, 'has found a rating of ' + blitzRank + ' for Blitz Chess.');
+                } else if (tokens[2] == "rapid" && res.data.chess_rapid) {
+                    let rapidRank = res.data.chess_rapid.last.rating;
+                    client.say(channel, 'has found a rating of ' + rapidRank + ' for Rapid Chess.');
+                } else {
+                    client.say(channel, 'has found no rating.');
+                }
+            });
+        }
+
+        if ((user.isMod || user.isBroadcaster) && message == "!c on") {
+            chanData.isOn = true;
+            client.say(channel, 'has been ACTIVATED! No giving moves.');
+        }
+
+        if ((user.isMod || user.isBroadcaster) && message == "!c off") {
+            chanData.isOn = false;
+            client.say(channel, 'has been DEACTIVATED. You are free to give moves.');
+        }
+
+        if (message == "!c stats") {
+            client.say(channel, 'has destroyed ' + hintsDestroyed + " hints.");
+        }
+
+        if (message == "!c uptime") {
+            let endTime = new Date();
+            client.say(channel, 'has been up for ' + ((endTime.getTime() - startTime.getTime()) / 1000) + ' seconds.');
+        }
+
+        if (chanData.isOn && !(user.isMod || user.isBroadcaster)) {
+            message = ' ' + message + ' ';
+
+            let found = false;
+            for (let i = 0; i < spaces.length; i++) {
+                let str = " " + spaces[i] + " ";
+
+                if (message.includes(str)) {
+                    found = true;
+                    i = spaces.length;
                 }
 
-                if ((user.mod || user.username == channel.slice(1,channel.length)) && message == "!c on") {
-                    channels[t].isOn = true;
-                    client.action(channel.slice(1,channel.length), 'has been ACTIVATED! No giving moves.');
-                }
-
-                if ((user.mod || user.username == channel.slice(1,channel.length)) && message == "!c off") {
-                    channels[t].isOn = false;
-                    client.action(channel.slice(1,channel.length), 'has been DEACTIVATED. You are free to give moves.');
-                }
-
-                if (message == "!c stats") {
-                    client.action(channel.slice(1,channel.length), 'has destroyed ' + hintsDestroyed + " hints.");
-                }
-
-                if (message == "!c uptime") {
-                    let endTime = new Date();
-                    client.action(channel.slice(1,channel.length), 'has been up for ' + ((endTime.getTime() - startTime.getTime()) / 1000) + ' seconds.');
-                }
-
-                if (channels[t].isOn && !(user.mod || user.username == channel.slice(1,channel.length))) {
-                    message = ' ' + message + ' ';
-
-                    let found = false;
-                    for (let i = 0; i < spaces.length; i++) {
-                        let str = " " + spaces[i] + " ";
-
-                        if (message.includes(str)) {
+                if (!found) {
+                    for (let j = 0; j < pieces.length; j++) {
+                        let pieceAndSpace = ' ' + pieces[j] + spaces[i] + ' ';
+                        let capturePieceAndSpace = ' ' + pieces[j] + 'x' + spaces[i] + ' ';
+                        if (message.includes(pieceAndSpace) || message.includes(capturePieceAndSpace)) {
                             found = true;
-                            i = spaces.length;
+                            j = pieces.length;
                         }
-
-                        if (!found) {
-                            for (let j = 0; j < pieces.length; j++) {
-                                let pieceAndSpace = ' ' + pieces[j] + spaces[i] + ' ';
-                                let capturePieceAndSpace = ' ' + pieces[j] + 'x' + spaces[i] + ' ';
-                                if (message.includes(pieceAndSpace) || message.includes(capturePieceAndSpace)) {
-                                    found = true;
-                                    j = pieces.length;
-                                }
-                            }
-                        }
-                    }
-
-                    if(!found) {
-                        for (let i = 0; i < unique.length; i++) {
-                            let str = " " + unique[i] + " ";
-                            if (message.includes(str)) {
-                                found = true;
-                                i = unique.length;
-                            }
-                        }
-                    }
-
-                    if (found) {
-                        client.action(channel.slice(1,channel.length), 'has detected a move! Please no sharing moves at this time.');
-                        client.timeout(channel.slice(1,channel.length), user.username, 1, "Hint in chess.");
-                        hintsDestroyed++;
                     }
                 }
+            }
+
+            if(!found) {
+                for (let i = 0; i < unique.length; i++) {
+                    let str = " " + unique[i] + " ";
+                    if (message.includes(str)) {
+                        found = true;
+                        i = unique.length;
+                    }
+                }
+            }
+
+            if (found) {
+                client.say(channel, 'has detected a move! Please no sharing moves at this time.');
+                const broadcaster = await api.users.getUserByName(channel.slice(1));
+                await api.moderation.deleteChatMessages(broadcaster, selfUser, msgData.id);
+                hintsDestroyed++;
             }
         }
     });
