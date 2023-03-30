@@ -35,7 +35,7 @@ document.querySelector("#channels").value = localStorage.getItem("channels");
 
 const CLIENT_ID = "y9xa0xv2nkjzhc8md2jbe4i1eocsvk";
 
-const accessMatch = document.location.hash.match(/#access_token=(.+)/);
+const accessMatch = document.location.hash.match(/access_token=([^&]+)/);
 if (accessMatch)
     localStorage.setItem("access-token", accessMatch[1]);
 
