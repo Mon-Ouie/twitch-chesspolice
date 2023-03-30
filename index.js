@@ -72,6 +72,8 @@ startButton.addEventListener("click", async () => {
         document.querySelector("#status").classList.add("status-failed");
     }
 
+    const apiClient = new api.ApiClient(authProvider);
+
     // Action when a user chats from any of the channels
     client.onMessage(async (channel, user, message, msgData) => {
         console.log(`[${channel}] ${user} <- ${message}`);
@@ -160,8 +162,8 @@ startButton.addEventListener("click", async () => {
 
             if (found) {
                 client.say(channel, 'has detected a move! Please no sharing moves at this time.');
-                const broadcaster = await api.users.getUserByName(channel.slice(1));
-                await api.moderation.deleteChatMessages(broadcaster, selfUser, msgData.id);
+                const broadcaster = await apiClient.users.getUserByName(channel.slice(1));
+                await apiClient.moderation.deleteChatMessages(broadcaster, selfUser, msgData.id);
                 hintsDestroyed++;
             }
         }
