@@ -72,7 +72,7 @@ startButton.addEventListener("click", async () => {
         document.querySelector("#status").classList.add("status-failed");
     }
 
-    const apiClient = new api.ApiClient(authProvider);
+    const apiClient = new api.ApiClient({authProvider});
 
     // Action when a user chats from any of the channels
     client.onMessage(async (channel, user, message, msgData) => {
